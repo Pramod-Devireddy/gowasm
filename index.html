@@ -1,0 +1,58 @@
+<!--
+File         : index.html
+Project      : GOWASM
+Created Date : Sunday, May 30th 2021, 12:54:57 PM
+Author       : Pramod Devireddy
+
+Last Modified: Sunday, 30th May 2021 7:37:14 pm
+Modified By  : Pramod Devireddy
+
+Copyright (c)2021 - Pramod Devireddy
+***************************************************************
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go WASM</title>
+</head>
+
+<body>
+
+    <button onclick="run()" id="runButton" disabled>Run</button>
+
+    <script src="wasm_exec.js"></script>
+
+    <script>
+        if (!WebAssembly.instantiateStreaming) {
+            // polyfill
+            WebAssembly.instantiateStreaming = async (resp, importObject) => {
+                const source = await (await resp).arrayBuffer();
+                return await WebAssembly.instantiate(source, importObject);
+            };
+        }
+
+        const go = new Go();
+
+        let mod, inst;
+
+        WebAssembly.instantiateStreaming(fetch("lib.wasm"), go.importObject).then(
+            result => {
+                mod = result.module;
+                inst = result.instance;
+                document.getElementById("runButton").disabled = false;
+            }
+        );
+
+        async function run() {
+            await go.run(inst);
+            inst = await WebAssembly.instantiate(mod, go.importObject); // reset instance
+        }
+    </script>
+</body>
+
+</html>
